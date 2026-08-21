@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ELO 反「玄学」点名系统</title>
+<meta name="description" content="基于 ELO 评分与 PRD 伪随机分布的课堂随机抽取公平性模型">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">ELO</span>
+    <div class="brand-text">
+      <h1>反「玄学」点名系统</h1>
+      <p>ELO 动态匹配 · PRD 伪随机分布 · 积分成长体系</p>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab is-on" data-tab="roll">点名</button>
+    <button class="tab" data-tab="roster">名单</button>
+    <button class="tab" data-tab="stats">数据</button>
+    <button class="tab" data-tab="shop">心愿商店</button>
+    <button class="tab" data-tab="settings">设置</button>
+  </nav>
+  <div class="top-actions">
+    <span class="badge" id="rosterBadge">虚拟名单 30 人</span>
+    <button class="icon-btn" id="themeBtn" title="切换深浅色">◐</button>
+    <button class="icon-btn" id="fsBtn" title="全屏">⛶</button>
+  </div>
+</header>
+
+<main>
+
+<!-- ==================== 点名 ==================== -->
+<section class="panel is-on" id="panel-roll">
+  <div class="roll-grid">
+    <div class="card stage-card">
+      <div class="diff-bar">
+        <span class="diff-label">题目难度</span>
+        <div class="seg" id="diffPresets">
+          <button data-preset="easy">简单</button>
+          <button data-preset="normal" class="is-on">中等</button>
+          <button data-preset="hard">困难</button>
+        </div>
+        <input type="range" id="diffRange" min="600" max="2000" step="10" value="1200">
+        <div class="diff-value"><b id="diffValue">1200</b><small>难度分</small></div>
+      </div>
+
+      <div class="stage">
+        <div class="stage-name" id="stageName">准备开始</div>
+        <div class="stage-sub" id="stageSub">按 <kbd>空格</kbd> 抽取本轮回答者</div>
+        <div class="stage-chips" id="stageChips"></div>
+      </div>
+
+      <div class="stage-actions">
+        <button class="btn primary xl" id="drawBtn">开始点名 <kbd>空格</kbd></button>
+        <button class="btn ok" id="rightBtn" disabled>答对 <kbd>1</kbd></button>
+        <button class="btn bad" id="wrongBtn" disabled>答错 <kbd>2</kbd></button>
+        <button class="btn ghost" id="skipBtn" disabled>本次跳过</button>
+        <button class="btn ghost" id="undoBtn">撤销上一条</button>
+      </div>
+      <p class="hint" id="algoHint"></p>
+    </div>
+
+    <aside class="card side-card">
+      <div class="side-block">
+        <h3>本轮候选权重 <small>透明可查 · Top 8</small></h3>
+        <ul class="weight-list" id="weightList"></ul>
+      </div>
+      <div class="side-block">
+        <h3>最近记录 <small id="logCount"></small></h3>
+        <ul class="log-list" id="logList"></ul>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ==================== 名单 ==================== -->
+<section class="panel" id="panel-roster">
+  <div class="card">
+    <div class="toolbar">
+      <button class="btn primary" id="importBtn">📥 导入 Excel 名单</button>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
+      <button class="btn" id="templateBtn">下载模板</button>
+      <button class="btn" id="exportBtn">📤 导出数据</button>
+      <button class="btn" id="addBtn">＋ 手动添加</button>
+      <button class="btn ghost" id="demoBtn">恢复虚拟名单</button>
+      <button class="btn danger ghost" id="clearBtn">清空名单</button>
+      <input type="search" id="rosterSearch" placeholder="搜索姓名…" class="search">
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="rosterTable">
+        <thead>
+          <tr>
+            <th>#</th><th>姓名</th><th>组别</th><th class="num">ELO</th><th class="num">变化</th>
+            <th class="num">被点</th><th class="num">对/错</th><th class="num">正确率</th>
+            <th class="num">积分</th><th>等级</th><th class="num">未点</th><th>出勤</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="rosterBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 数据 ==================== -->
+<section class="panel" id="panel-stats">
+  <div class="metrics" id="metrics"></div>
+
+  <div class="card">
+    <h3>被点名次数分布 <small>越平齐说明机会越均等</small></h3>
+    <div class="bars" id="pickBars"></div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="card">
+      <h3>ELO 能力排行</h3>
+      <ol class="rank-list" id="eloRank"></ol>
+    </div>
+    <div class="card">
+      <h3>积分排行</h3>
+      <ol class="rank-list" id="pointRank"></ol>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>公平性对照实验 <small>同一名单下，纯随机 vs 本系统</small></h3>
+    <div class="toolbar">
+      <label>模拟点名次数
+        <input type="number" id="simDraws" value="300" min="30" max="20000" step="10">
+      </label>
+      <button class="btn primary" id="simBtn">运行蒙特卡洛模拟</button>
+    </div>
+    <div id="simResult" class="sim-result"></div>
+  </div>
+</section>
+
+<!-- ==================== 心愿商店 ==================== -->
+<section class="panel" id="panel-shop">
+  <div class="card">
+    <div class="toolbar">
+      <h3 style="margin:0;flex:1">心愿兑换 <small>积分 → 成长 → 兑换，形成激励闭环</small></h3>
+      <button class="btn" id="addItemBtn">＋ 新增心愿</button>
+    </div>
+    <div class="shop-grid" id="shopGrid"></div>
+  </div>
+  <div class="card">
+    <h3>兑换记录</h3>
+    <ul class="log-list" id="redeemList"></ul>
+  </div>
+</section>
+
+<!-- ==================== 设置 ==================== -->
+<section class="panel" id="panel-settings">
+  <div class="settings-grid">
+    <div class="card">
+      <h3>算法一：ELO 动态匹配</h3>
+      <label class="field">
+        <span>调整系数 k<i id="kVal"></i></span>
+        <input type="range" id="setK" min="8" max="64" step="1">
+        <small>越大，单次答题对评分的影响越强</small>
+      </label>
+      <label class="field">
+        <span>基准差值 RD<i id="rdVal"></i></span>
+        <input type="range" id="setRD" min="150" max="800" step="10">
+        <small>公式 E = 1 / (1 + e^((D − R) / RD))</small>
+      </label>
+      <label class="field">
+        <span>匹配宽容度 σ<i id="sigmaVal"></i></span>
+        <input type="range" id="setSigma" min="60" max="600" step="10">
+        <small>越小越严格地"势均力敌"</small>
+      </label>
+      <label class="field">
+        <span>ELO 匹配强度<i id="eloPowerVal"></i></span>
+        <input type="range" id="setEloPower" min="0" max="1" step="0.05">
+        <small>调到 0 即关闭难度匹配</small>
+      </label>
+    </div>
+
+    <div class="card">
+      <h3>算法二：PRD 伪随机分布</h3>
+      <label class="field">
+        <span>PRD 强度<i id="prdPowerVal"></i></span>
+        <input type="range" id="setPrdPower" min="0" max="1" step="0.05">
+        <small>调到 0 即退化为独立随机事件</small>
+      </label>
+      <label class="field">
+        <span>保底倍数<i id="capVal"></i></span>
+        <input type="range" id="setCap" min="1" max="4" step="0.5">
+        <small>连续未被点名超过「人数 × 倍数」次时强制点到</small>
+      </label>
+      <div class="callout" id="prdInfo"></div>
+    </div>
+
+    <div class="card">
+      <h3>积分经济</h3>
+      <label class="field"><span>答对基础积分<i id="pcVal"></i></span><input type="range" id="setPC" min="2" max="30" step="1"></label>
+      <label class="field"><span>答错参与分<i id="pwVal"></i></span><input type="range" id="setPW" min="0" max="10" step="1"></label>
+      <label class="field"><span>连对加成<i id="cbVal"></i></span><input type="range" id="setCB" min="0" max="15" step="1"><small>难度越高积分越高：基础分 ×(1 + (难度−均分)/400)</small></label>
+      <label class="field"><span>抽取动画时长<i id="animVal"></i></span><input type="range" id="setAnim" min="0" max="4000" step="100"></label>
+      <label class="check"><input type="checkbox" id="setShowShop"><span>显示「心愿商店」标签页<small>关闭后只保留 ELO 与 PRD 两个算法主线，积分仍照常累计</small></span></label>
+    </div>
+
+    <div class="card">
+      <h3>数据管理</h3>
+      <p class="muted">全部数据仅保存在本机浏览器，不上传服务器。换电脑时可用下面的存档文件迁移。</p>
+      <div class="toolbar">
+        <button class="btn" id="saveJsonBtn">导出存档 (JSON)</button>
+        <button class="btn" id="loadJsonBtn">导入存档</button>
+        <input type="file" id="jsonInput" accept=".json" hidden>
+      </div>
+      <div class="toolbar">
+        <button class="btn ghost" id="resetStatsBtn">清空成绩（保留名单）</button>
+        <button class="btn danger ghost" id="resetAllBtn">恢复出厂设置</button>
+      </div>
+      <p class="muted small" id="aboutText"></p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- 弹窗 -->
+<div class="backdrop" id="backdrop" hidden>
+  <div class="modal card" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3 id="modalTitle">标题</h3><button class="icon-btn" id="modalClose">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="js/algo.js"></script>
+<script src="js/store.js"></script>
+<script src="js/xlsxio.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

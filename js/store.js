@@ -16,12 +16,12 @@
   ];
 
   var LEVELS = [
-    { name: '初入学堂', min: 0, icon: '🌱' },
-    { name: '勤学之士', min: 120, icon: '📗' },
-    { name: '善思之士', min: 320, icon: '📘' },
-    { name: '博闻之士', min: 640, icon: '📙' },
-    { name: '课堂智者', min: 1080, icon: '🏅' },
-    { name: '一班之光', min: 1680, icon: '👑' }
+    { name: '初入学堂', min: 0, icon: 'Ⅰ' },
+    { name: '勤学之士', min: 120, icon: 'Ⅱ' },
+    { name: '善思之士', min: 320, icon: 'Ⅲ' },
+    { name: '博闻之士', min: 640, icon: 'Ⅳ' },
+    { name: '课堂智者', min: 1080, icon: 'Ⅴ' },
+    { name: '一班之光', min: 1680, icon: 'Ⅵ' }
   ];
 
   var DEFAULT_SETTINGS = {
@@ -42,11 +42,11 @@
   };
 
   var DEFAULT_SHOP = [
-    { id: 'w1', name: '免作业券', cost: 300, icon: '📝', desc: '免一次当日书面作业' },
-    { id: 'w2', name: '自选座位', cost: 220, icon: '💺', desc: '下周任选座位一次' },
-    { id: 'w3', name: '课间点歌', cost: 150, icon: '🎵', desc: '课间播放一首指定歌曲' },
-    { id: 'w4', name: '免点名券', cost: 260, icon: '🛡️', desc: '本节课可豁免一次点名' },
-    { id: 'w5', name: '出题特权', cost: 400, icon: '🎯', desc: '为下节课出一道题' }
+    { id: 'w1', name: '免作业券', cost: 300, desc: '免一次当日书面作业' },
+    { id: 'w2', name: '自选座位', cost: 220, desc: '下周任选座位一次' },
+    { id: 'w3', name: '课间点歌', cost: 150, desc: '课间播放一首指定歌曲' },
+    { id: 'w4', name: '免点名券', cost: 260, desc: '本节课可豁免一次点名' },
+    { id: 'w5', name: '出题特权', cost: 400, desc: '为下节课出一道题' }
   ];
 
   function uid() {

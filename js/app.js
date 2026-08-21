@@ -165,11 +165,11 @@
     var chips = [
       '<span class="chip">ELO <b>' + fmt(s.elo) + '</b></span>',
       '<span class="chip">积分 <b>' + s.points + '</b></span>',
-      '<span class="chip">' + lv.icon + ' ' + lv.name + '</span>',
+      '<span class="chip">' + lv.name + ' ' + lv.icon + '</span>',
       '<span class="chip">被点 <b>' + s.picks + '</b> 次</span>',
       '<span class="chip good">理论答对率 <b>' + (detail.expect * 100).toFixed(0) + '%</b></span>'
     ];
-    if (forced) chips.push('<span class="chip hot">🛡 保底触发</span>');
+    if (forced) chips.push('<span class="chip hot">保底触发</span>');
     else chips.push('<span class="chip">本轮抽中概率 <b>' + (detail.p * 100).toFixed(1) + '%</b></span>');
     $('stageChips').innerHTML = chips.join('');
   }
@@ -220,10 +220,10 @@
 
     var lv = S.levelOf(s.points);
     if (result !== 'skip') {
-      $('stageSub').innerHTML = (result === 'correct' ? '✅ 答对' : '❌ 答错')
+      $('stageSub').innerHTML = (result === 'correct' ? '答对' : '答错')
         + '　ELO <b class="delta ' + (eloDelta >= 0 ? 'up' : 'down') + '">' + sign(eloDelta, 1) + '</b>'
         + '　积分 <b class="delta up">' + sign(pointDelta) + '</b>'
-        + '　' + lv.icon + ' ' + lv.name;
+        + '　' + lv.name + ' ' + lv.icon;
     } else {
       $('stageSub').textContent = '已跳过，本次不计入评分';
     }
@@ -304,12 +304,12 @@
         + '<td class="num">' + s.correct + ' / ' + s.wrong + '</td>'
         + '<td class="num">' + (s.correct + s.wrong ? rate + '%' : '—') + '</td>'
         + '<td class="num">' + s.points + '</td>'
-        + '<td class="lvl">' + lv.icon + ' ' + lv.name + '</td>'
+        + '<td class="lvl">' + lv.name + ' ' + lv.icon + '</td>'
         + '<td class="num">' + s.prdFail + '</td>'
         + '<td><button class="switch ' + (s.active === false ? '' : 'on') + '" data-act="toggle">'
         + (s.active === false ? '缺席' : '在座') + '</button></td>'
-        + '<td><button class="mini-btn" data-act="edit">✎</button>'
-        + '<button class="mini-btn" data-act="del">✕</button></td>'
+        + '<td><button class="mini-btn" data-act="edit">编辑</button>'
+        + '<button class="mini-btn" data-act="del">删除</button></td>'
         + '</tr>';
     }).join('') : '<tr><td colspan="13" class="empty">名单为空，点击「导入 Excel 名单」或「手动添加」</td></tr>';
 
@@ -519,7 +519,7 @@
       return fmt(s.elo) + ' <span class="delta ' + (d >= 0 ? 'up' : 'down') + '">' + sign(d) + '</span>';
     });
     $('pointRank').innerHTML = rank(list, 'points', function (s) {
-      return s.points + ' 分 ' + S.levelOf(s.points).icon;
+      return s.points + ' 分 · ' + S.levelOf(s.points).icon;
     });
   }
 
@@ -556,12 +556,12 @@
    * ================================================================= */
   function renderShop() {
     $('shopGrid').innerHTML = st().shop.map(function (it) {
-      return '<div class="shop-item" data-id="' + it.id + '"><div class="ic">' + esc(it.icon || '🎁') + '</div>'
+      return '<div class="shop-item" data-id="' + it.id + '">'
         + '<h4>' + esc(it.name) + '</h4><p>' + esc(it.desc || '') + '</p>'
         + '<div class="cost">' + it.cost + ' 积分</div>'
-        + '<div class="toolbar" style="margin:10px 0 0;justify-content:center">'
-        + '<button class="btn primary" data-act="redeem">兑换</button>'
-        + '<button class="mini-btn" data-act="delitem">✕</button></div></div>';
+        + '<div class="toolbar">'
+        + '<button class="btn" data-act="redeem">兑换</button>'
+        + '<button class="mini-btn" data-act="delitem">删除</button></div></div>';
     }).join('') || '<div class="empty">还没有心愿物品</div>';
 
     $('redeemList').innerHTML = st().redeems.slice(-30).reverse().map(function (r) {
@@ -599,7 +599,6 @@
   function addShopItem() {
     openModal('新增心愿物品',
       '<label><span>名称</span><input type="text" id="sName" placeholder="例如：与老师共进午餐"></label>'
-      + '<label><span>图标（emoji）</span><input type="text" id="sIcon" value="🎁"></label>'
       + '<label><span>说明</span><input type="text" id="sDesc" placeholder="一句话描述"></label>'
       + '<label><span>所需积分</span><input type="number" id="sCost" value="200"></label>',
       [
@@ -609,7 +608,7 @@
             var n = $('sName').value.trim();
             if (!n) { toast('请填写名称'); return; }
             st().shop.push({
-              id: S.uid(), name: n, icon: $('sIcon').value.trim() || '🎁',
+              id: S.uid(), name: n,
               desc: $('sDesc').value.trim(), cost: parseInt($('sCost').value, 10) || 100
             });
             S.save(); closeModal(); renderShop();

@@ -15,7 +15,7 @@
     <span class="logo">ELO</span>
     <div class="brand-text">
       <h1>反「玄学」点名系统</h1>
-      <p>ELO 动态匹配 · PRD 伪随机分布 · 积分成长体系</p>
+      <p>ELO × PRD</p>
     </div>
   </div>
   <nav class="tabs" id="tabs">
@@ -27,8 +27,8 @@
   </nav>
   <div class="top-actions">
     <span class="badge" id="rosterBadge">虚拟名单 30 人</span>
-    <button class="icon-btn" id="themeBtn" title="切换深浅色">◐</button>
-    <button class="icon-btn" id="fsBtn" title="全屏">⛶</button>
+    <button class="icon-btn" id="themeBtn" title="切换深浅色">外观</button>
+    <button class="icon-btn" id="fsBtn" title="全屏">全屏</button>
   </div>
 </header>
 
@@ -82,13 +82,13 @@
 <section class="panel" id="panel-roster">
   <div class="card">
     <div class="toolbar">
-      <button class="btn primary" id="importBtn">📥 导入 Excel 名单</button>
+      <button class="btn primary" id="importBtn">导入 Excel 名单</button>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
       <button class="btn" id="templateBtn">下载模板</button>
-      <button class="btn" id="exportBtn">📤 导出数据</button>
-      <button class="btn" id="addBtn">＋ 手动添加</button>
-      <button class="btn" id="seedBtn">⭳ 载入仓库名单</button>
-      <button class="btn" id="seedExportBtn">⭱ 导出为仓库名单</button>
+      <button class="btn" id="exportBtn">导出数据</button>
+      <button class="btn" id="addBtn">手动添加</button>
+      <button class="btn" id="seedBtn">载入仓库名单</button>
+      <button class="btn" id="seedExportBtn">导出为仓库名单</button>
       <button class="btn ghost" id="demoBtn">恢复虚拟名单</button>
       <button class="btn danger ghost" id="clearBtn">清空名单</button>
       <input type="search" id="rosterSearch" placeholder="搜索姓名…" class="search">
@@ -113,7 +113,7 @@
   <div class="metrics" id="metrics"></div>
 
   <div class="card">
-    <h3>被点名次数分布 <small>越平齐说明机会越均等</small></h3>
+    <h3>被点名次数分布 <small>越平齐，机会越均等</small></h3>
     <div class="bars" id="pickBars"></div>
   </div>
 
@@ -144,8 +144,8 @@
 <section class="panel" id="panel-shop">
   <div class="card">
     <div class="toolbar">
-      <h3 style="margin:0;flex:1">心愿兑换 <small>积分 → 成长 → 兑换，形成激励闭环</small></h3>
-      <button class="btn" id="addItemBtn">＋ 新增心愿</button>
+      <h3 style="margin:0;flex:1">心愿兑换 <small>积分 → 成长 → 兑换</small></h3>
+      <button class="btn" id="addItemBtn">新增心愿</button>
     </div>
     <div class="shop-grid" id="shopGrid"></div>
   </div>
@@ -228,7 +228,7 @@
 <!-- 弹窗 -->
 <div class="backdrop" id="backdrop" hidden>
   <div class="modal card" id="modal" role="dialog" aria-modal="true">
-    <div class="modal-head"><h3 id="modalTitle">标题</h3><button class="icon-btn" id="modalClose">✕</button></div>
+    <div class="modal-head"><h3 id="modalTitle">标题</h3><button class="icon-btn" id="modalClose">关闭</button></div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-foot" id="modalFoot"></div>
   </div>

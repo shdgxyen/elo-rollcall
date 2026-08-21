@@ -94,10 +94,34 @@
     });
   }
 
+  /** 把仓库里的 data/roster.json 转成学生对象 */
+  function fromSeed(seed) {
+    var arr = (seed && seed.students) || [];
+    return arr.filter(function (x) {
+      return x && String(x.name || '').trim();
+    }).map(function (x) {
+      var elo = parseFloat(x.elo);
+      return makeStudent(x.name, isFinite(elo) ? elo : DEFAULT_SETTINGS.baseElo, x.group || '');
+    });
+  }
+
+  /** 把当前名单导出为仓库可用的 data/roster.json 结构 */
+  function toSeed(label) {
+    return {
+      class: label || '我的班级',
+      demo: false,
+      note: '由点名系统「导出为仓库名单」生成，放到仓库的 data/roster.json 即可。',
+      students: state.students.map(function (s) {
+        return { name: s.name, group: s.group || '', elo: Math.round(s.elo) };
+      })
+    };
+  }
+
   function defaultState() {
     return {
       version: 1,
       isDemo: true,                 // 当前是否为虚拟名单
+      rosterLabel: '',              // 名单来源标签（仓库名单会带班级名）
       students: demoRoster(),
       settings: Object.assign({}, DEFAULT_SETTINGS),
       shop: DEFAULT_SHOP.map(function (i) { return Object.assign({}, i); }),
@@ -157,6 +181,8 @@
   }
 
   root.Store = {
+    fromSeed: fromSeed,
+    toSeed: toSeed,
     KEY: KEY,
     LEVELS: LEVELS,
     DEMO_NAMES: DEMO_NAMES,

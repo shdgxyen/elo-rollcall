@@ -314,7 +314,8 @@
     }).join('') : '<tr><td colspan="13" class="empty">名单为空，点击「导入 Excel 名单」或「手动添加」</td></tr>';
 
     var total = st().students.length, act = activeStudents().length;
-    $('rosterBadge').textContent = (st().isDemo ? '虚拟名单 ' : '真实名单 ') + total + ' 人'
+    var label = st().rosterLabel || (st().isDemo ? '虚拟名单' : '真实名单');
+    $('rosterBadge').textContent = label + ' ' + total + ' 人'
       + (act !== total ? '（在座 ' + act + '）' : '');
   }
 
@@ -344,6 +345,52 @@
         }
       ]);
     setTimeout(function () { $('mName').focus(); }, 30);
+  }
+
+  /* ------------------------------------------- 仓库名单 data/roster.json */
+  /**
+   * 名单跟着仓库走：仓库里的 data/roster.json 作为"种子名单"，
+   * 首次打开（本机还没有存档）时自动载入；成绩仍然只存在本机浏览器。
+   */
+  function loadSeedRoster(silent) {
+    return fetch('data/roster.json', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (seed) {
+        var students = S.fromSeed(seed);
+        if (!students.length) throw new Error('roster.json 里没有有效姓名');
+        var s = st();
+        s.students = students;
+        s.isDemo = !!seed.demo;
+        s.rosterLabel = seed.class || (seed.demo ? '虚拟名单' : '仓库名单');
+        s.log = []; s.redeems = [];
+        pending = null;
+        S.save();
+        applyPreset(s.diffPreset || 'normal');
+        renderAll();
+        if (!silent) toast('已载入仓库名单：' + s.rosterLabel + '（' + students.length + ' 人）');
+        return true;
+      })
+      .catch(function (err) {
+        if (!silent) {
+          toast('读不到 data/roster.json：' + err.message);
+          console.warn('载入仓库名单失败', err);
+        }
+        return false;
+      });
+  }
+
+  function exportSeedRoster() {
+    if (!st().students.length) { toast('名单为空'); return; }
+    var label = prompt('给这份名单起个名字（会显示在右上角）：', st().rosterLabel || '我的班级');
+    if (label === null) return;
+    var blob = new Blob([JSON.stringify(S.toSeed(label.trim() || '我的班级'), null, 2) + '\n'],
+      { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'roster.json';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    toast('已导出 roster.json，上传到仓库的 data/ 目录替换原文件即可');
   }
 
   /* ---------------------------------------------------- Excel 导入流程 */
@@ -415,6 +462,7 @@
           var s = st();
           s.students = names.map(function (n, i) { return S.makeStudent(n, elos[i], groups[i]); });
           s.isDemo = false;
+          s.rosterLabel = '真实名单';
           s.log = [];
           s.redeems = [];
           pending = null;
@@ -692,10 +740,15 @@
     $('templateBtn').onclick = function () { IO.downloadTemplate(); };
     $('exportBtn').onclick = function () { IO.exportAll(st(), S.levelOf); toast('已导出 Excel'); };
     $('addBtn').onclick = function () { editStudent(null); };
+    $('seedBtn').onclick = function () {
+      if (st().log.length && !confirm('载入仓库名单会替换当前名单并清空成绩记录，确定吗？')) return;
+      loadSeedRoster(false);
+    };
+    $('seedExportBtn').onclick = exportSeedRoster;
     $('demoBtn').onclick = function () {
       if (!confirm('将用 30 人虚拟名单替换当前名单，且清空所有成绩，确定吗？')) return;
       var s = st();
-      s.students = S.demoRoster(); s.isDemo = true; s.log = []; s.redeems = [];
+      s.students = S.demoRoster(); s.isDemo = true; s.rosterLabel = '虚拟名单'; s.log = []; s.redeems = [];
       pending = null; S.save(); applyPreset('normal'); renderAll();
       toast('已恢复虚拟名单');
     };
@@ -786,12 +839,15 @@
 
   /* ------------------------------------------------------------ 启动 */
   function init() {
-    S.load();
+    var hasLocalSave = S.load();
     applyTheme();
     bind();
     if (!st().difficulty) st().difficulty = Math.round(classMean());
     setDifficulty(st().difficulty, st().diffPreset || 'normal');
     renderAll();
+    // 本机还没有存档时，优先用仓库里的 data/roster.json；
+    // 读不到（例如以 file:// 方式打开）就沿用内置虚拟名单。
+    if (!hasLocalSave && typeof fetch === 'function') loadSeedRoster(true);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
